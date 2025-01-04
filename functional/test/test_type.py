@@ -72,6 +72,8 @@ if TYPE_CHECKING:
 
         t_map: Sequence[int] = seq([1, 2, 3, 4]).map(lambda x: x * -1)
 
+        t_map_indexed: Sequence[int] = seq([1, 2, 3, 4]).map_indexed(lambda i, x: x * i)
+
         t_select: Sequence[int] = num_seq.select(lambda x: x * -1)
 
         t_starmap: Sequence[int] = seq([(2, 3), (-2, 1), (0, 10)]).starmap(
