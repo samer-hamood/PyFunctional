@@ -401,6 +401,21 @@ class TestPipeline(unittest.TestCase):
         self.assertIteratorEqual(expect, result)
         self.assert_type(result)
 
+    @parametrize(
+        "sequence, expected",
+        [
+            ([1, None, 2, None, 3, None, 4, None, 5], [1, 2, 3, 4, 5]),
+            ([None, None, 1, 2, 3, None, 4, 5, None], [1, 2, 3, 4, 5]),
+            ([1, 2, 3, 4, 5], [1, 2, 3, 4, 5]),
+            ([None, None, None, None, None], []),
+            ([], []),
+        ],
+    )
+    def test_filter_not_none(self, sequence, expected):
+        result = self.seq(sequence).filter_not_none()
+        self.assertIteratorEqual(expected, result)
+        self.assert_type(result)
+
     def test_map_filter(self):
         f = lambda x: x > 0
         g = lambda x: x * 2
