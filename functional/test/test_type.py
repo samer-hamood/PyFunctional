@@ -44,6 +44,10 @@ if TYPE_CHECKING:
 
         t_tails: Sequence[Sequence[int]] = seq([1, 2, 3]).tails()
 
+        t_plus: Sequence[int] = seq([1, 2, 3]).plus(seq([4, 5, 6]))
+
+        t_append: Sequence[int] = seq([1, 2, 3]).append(seq([4, 5, 6]))
+
         t_cartesian: Sequence[tuple[int, int]] = seq.range(2).cartesian(range(2))
 
         t_drop: Sequence[int] = seq([1, 2, 3, 4, 5]).drop(2)
