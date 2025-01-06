@@ -301,6 +301,33 @@ class TestPipeline(unittest.TestCase):
         self.assertIteratorEqual(expect, result)
         self.assert_type(result)
 
+    @parametrize(
+        "sequence, indices, expected",
+        [
+            ([1, 2, 3, 4, 5, 1, 2], [0, 1, 5, 6], [3, 4, 5]),
+            # No indices specified
+            ([1, 2, 3, 4, 5, 1, 2], [], [1, 2, 3, 4, 5, 1, 2]),
+            ([1, 2, 3, 4, 5, 1, 2], [2, 3, 4], [1, 2, 1, 2]),
+        ],
+    )
+    def test_drop_at(self, sequence, indices, expected):
+        result = self.seq(sequence).drop_at(*indices)
+        self.assertIteratorEqual(expected, result)
+        self.assert_type(result)
+
+    @parametrize(
+        "sequence, indices",
+        [
+            # Negative indices
+            ([1, 2, 3, 4, 5, 6, 7], [-2, -1]),
+            # Indices greater than or equal to sequence size
+            ([1, 2, 3, 4, 5, 6, 7], [7, 8, 9]),
+        ],
+    )
+    def test_drop_at_raises_error_on_invalid_indices(self, sequence, indices):
+        with self.assertRaises(ValueError):
+            self.seq(sequence).drop_at(*indices)
+
     def test_take(self):
         s = self.seq([1, 2, 3, 4, 5, 6])
         expect = [1, 2, 3, 4]

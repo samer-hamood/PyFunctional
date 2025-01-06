@@ -540,6 +540,26 @@ class Sequence(Generic[_T_co]):
         """
         return self._transform(transformations.drop_while_t(func))
 
+    def drop_at(self, *indices: int) -> Sequence[_T]:
+        """
+        Drops elements in the sequence at the speified indices.
+
+        >>> seq([1, 2, 3, 4, 5, 1, 2]).drop_at(5, 6)
+        [1, 2, 3, 4, 5]
+
+        >>> seq([1, 2, 3, 4, 5, 1, 2]).drop_at()
+        [1, 2, 3, 4, 5, 1, 2]
+
+        :param indices: indices of elements to exclude
+        :return: sequence without elements at specified indices,
+                 or just this sequence if no indices specified
+        :raises ValueError: if any index specified is invalid
+        """
+        for index in indices:
+            if index < 0 or index > self.len():
+                raise ValueError(f"Invalid index: {index}")
+        return self.filter_indexed(lambda i, _: i not in indices)
+
     def take(self, n: int) -> Sequence[_T_co]:
         """
         Take the first n elements of the sequence.

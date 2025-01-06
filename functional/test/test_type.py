@@ -54,6 +54,8 @@ if TYPE_CHECKING:
             lambda x: x < 3
         )
 
+        t_drop_at: Sequence[int] = seq([1, 2, 3, 4, 5]).drop_at(0, 2, 4)
+
         t_take: Sequence[int] = seq([1, 2, 3, 4]).take(2)
 
         t_take_while: Sequence[int] = seq([1, 2, 3, 4, 5, 1, 2]).take_while(
