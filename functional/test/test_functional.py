@@ -530,9 +530,20 @@ class TestPipeline(unittest.TestCase):
         self.assertIteratorEqual(result, [2, 3])
         self.assert_type(result)
 
-    def test_any(self):
-        l = [True, False]
-        self.assertTrue(self.seq(l).any())
+    @parametrize(
+        "sequence, no_function",
+        [
+            (["aaa", "BBB", "ccc"], False),
+            ([True, False], True),
+        ],
+    )
+    def test_any(self, sequence, no_function):
+        if no_function:
+            self.assertTrue(self.seq(sequence).any())
+        else:
+            self.assertTrue(self.seq(sequence).any(str.islower))
+            self.assertTrue(self.seq(sequence).any(str.isupper))
+            self.assertFalse(self.seq(sequence).any(lambda s: "d" in s))
 
     def test_all(self):
         l = [True, False]
