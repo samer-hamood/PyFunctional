@@ -929,6 +929,30 @@ class Sequence(Generic[_T_co]):
         else:
             return all(func(element) for element in self)
 
+    def none(self, func: Callable[[_T_co], Any] | None = None) -> bool:
+        """
+        Returns True if func on all elements in sequence evaluates to False,
+        or if func is not specified or None, True is returned if all elements
+        have a truth value of False.
+
+        >>> seq([-1, -2, -3]).none(lambda x: x > 0)
+        True
+
+        >>> seq([1, 2, -1]).none(lambda x: x > 0)
+        False
+
+        >>> seq([False, False]).none()
+        True
+
+        >>> seq([True, False]).none()
+        False
+
+        :param func: function to check elements
+        :return: True if func on all elements returns False,
+                 or if func is not specified, True if all elements are False
+        """
+        return not self.any(func)
+
     def exists(self, func: Callable[[_T_co], Any]) -> bool:
         """
         Returns True if an element in the sequence makes func evaluate to True.

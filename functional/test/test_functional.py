@@ -560,6 +560,22 @@ class TestPipeline(unittest.TestCase):
             self.assertTrue(self.seq(sequence).all(str.islower))
             self.assertFalse(self.seq(sequence).all(str.isupper))
 
+    @parametrize(
+        "sequence, expected, no_function",
+        [
+            ([False, False], True, True),
+            ([True, False], False, True),
+            ([True, True], False, True),
+            (["aaa", "bbb", "ccc"], True, False),
+        ],
+    )
+    def test_none(self, sequence, expected, no_function):
+        if no_function:
+            self.assertEqual(expected, self.seq(sequence).none())
+        else:
+            self.assertTrue(self.seq(sequence).none(str.isupper))
+            self.assertFalse(self.seq(sequence).none(str.islower))
+
     def test_enumerate(self):
         l = [2, 3, 4]
         e = [(0, 2), (1, 3), (2, 4)]
