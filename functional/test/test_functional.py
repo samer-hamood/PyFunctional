@@ -4,7 +4,9 @@ import array
 from collections import namedtuple, deque
 from itertools import product
 
-from functional.pipeline import Sequence, is_iterable, _wrap, extend
+from parametrize import parametrize  # type: ignore
+
+from functional.pipeline import Sequence, is_iterable, _wrap, extend, Option
 from functional.transformations import name
 from functional import seq, pseq
 
@@ -27,8 +29,8 @@ class TestPipeline(unittest.TestCase):
     def setUp(self):
         self.seq = seq
 
-    def assert_type(self, s):
-        self.assertTrue(isinstance(s, Sequence))
+    def assert_type(self, s, t: type = Sequence):
+        self.assertTrue(isinstance(s, t))
 
     def assert_not_type(self, s):
         self.assertFalse(isinstance(s, Sequence))
@@ -201,6 +203,42 @@ class TestPipeline(unittest.TestCase):
         l = self.seq([deque(), deque()], no_wrap=True).head_or_none(no_wrap=False)
         self.assert_type(l)
 
+    @parametrize(
+        "sequence, present, head, mapped_value, flat_mapped_value",
+        [
+            ([], False, None, None, []),
+            ([1, 2, 3, 4, 5], True, 1, 0, None),
+            ([[[1, 2]], 3, 4, 5], True, [[1, 2]], 0, [1, 2]),
+        ],
+    )
+    def test_head_option(
+        self, sequence, present, head, mapped_value, flat_mapped_value
+    ):
+        head_option = self.seq(sequence).head_option()
+        self.assert_type(head_option, Option)
+        self.assertEqual(present, head_option.non_empty())
+        self.assertEqual(not present, head_option.empty())
+        self.assertEqual(head, head_option.or_else(None))
+        if head is None:
+            h = []
+        elif isinstance(head, list):
+            h = head
+        else:
+            h = [head]
+        s = [2, 3, 4]
+        self.assertEqual(self.seq(h + s), head_option.plus(s))
+        self.assert_type(head_option.plus(s))
+        self.assertEqual(mapped_value, head_option.map(lambda x: 0).or_else(None))
+        self.assert_type(head_option.map(lambda x: 0), Option)
+        if flat_mapped_value:
+            self.assertEqual(self.seq(flat_mapped_value), head_option.flatten())
+            self.assert_type(head_option.flat_map(lambda x: x))
+        if sequence:
+            self.assertEqual(head, head_option.or_raise_error())
+        else:
+            with self.assertRaises(ValueError):
+                head_option.or_raise_error()
+
     def test_last(self):
         l = self.seq([1, 2, 3]).map(lambda x: x)
         self.assertEqual(l.last(), 3)
@@ -241,6 +279,42 @@ class TestPipeline(unittest.TestCase):
         self.assert_not_type(l)
         l = self.seq([deque(), deque()], no_wrap=True).last_or_none(no_wrap=False)
         self.assert_type(l)
+
+    @parametrize(
+        "sequence, present, last, mapped_value, flat_mapped_value",
+        [
+            ([], False, None, None, []),
+            ([1, 2, 3, 4, 5], True, 5, 0, None),
+            ([1, 2, 3, [[4, 5]]], True, [[4, 5]], 0, [4, 5]),
+        ],
+    )
+    def test_last_option(
+        self, sequence, present, last, mapped_value, flat_mapped_value
+    ):
+        last_option = self.seq(sequence).last_option()
+        self.assert_type(last_option, Option)
+        self.assertEqual(present, last_option.non_empty())
+        self.assertEqual(not present, last_option.empty())
+        self.assertEqual(last, last_option.or_else(None))
+        if last is None:
+            l = []
+        elif isinstance(last, list):
+            l = last
+        else:
+            l = [last]
+        s = [2, 3, 4]
+        self.assertEqual(self.seq(l + s), last_option.plus(s))
+        self.assert_type(last_option.plus(s))
+        self.assertEqual(mapped_value, last_option.map(lambda x: 0).or_else(None))
+        self.assert_type(last_option.map(lambda x: 0), Option)
+        if flat_mapped_value:
+            self.assertEqual(self.seq(flat_mapped_value), last_option.flatten())
+            self.assert_type(last_option.flat_map(lambda x: x))
+        if sequence:
+            self.assertEqual(last, last_option.or_raise_error())
+        else:
+            with self.assertRaises(ValueError):
+                last_option.or_raise_error()
 
     def test_init(self):
         result = self.seq([1, 2, 3, 4]).map(lambda x: x).init()

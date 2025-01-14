@@ -3,6 +3,7 @@ The pipeline module contains the transformations and actions API of PyFunctional
 """
 
 from __future__ import annotations
+from dataclasses import dataclass
 from operator import mul, add
 import collections
 from functools import reduce, wraps, partial
@@ -12,9 +13,8 @@ import csv
 import sqlite3
 import re
 
-from typing import TYPE_CHECKING
 import typing
-from typing import NamedTuple, TypeVar, Generic, overload
+from typing import NamedTuple, TypeVar, Generic, overload, TYPE_CHECKING
 
 from tabulate import tabulate
 
@@ -329,6 +329,21 @@ class Sequence(Generic[_T_co]):
             return None
         return self.head(no_wrap=no_wrap)
 
+    def head_option(self):
+        """
+        Returns an Option with the head of the sequence,
+        or an empty Option if sequence is empty.
+
+         >>> seq([1, 2, 3]).head_option()
+        Option(1)
+
+        >>> seq([]).head_option()
+        Option(None)
+
+        :return: Option containing the head or None
+        """
+        return Option(None if self.empty() else self.head_or_none(True))
+
     def first_or_none(self, no_wrap: bool | None = None) -> _T_co | None:
         """
         Returns the first element of the sequence or None, if the sequence is empty.
@@ -343,6 +358,21 @@ class Sequence(Generic[_T_co]):
         :return: first element of sequence or None if sequence is empty
         """
         return self.head_or_none(no_wrap=no_wrap)
+
+    def first_option(self):
+        """
+        Returns an Option with the first element of the sequence,
+        or an empty Option if sequence is empty.
+
+         >>> seq([1, 2, 3]).head_option()
+        Option(1)
+
+        >>> seq([]).head_option()
+        Option(None)
+
+        :return: Option containing the first element or None
+        """
+        return self.head_option()
 
     def last(self, no_wrap: bool | None = None) -> _T_co:
         """
@@ -382,6 +412,21 @@ class Sequence(Generic[_T_co]):
         if not self.sequence:
             return None
         return self.last(no_wrap=no_wrap)
+
+    def last_option(self):
+        """
+        Returns an Option with the last element of the sequence,
+        or an empty Option if the sequence is empty.
+
+         >>> seq([1, 2, 3]).head_option()
+        Option(3)
+
+        >>> seq([]).head_option()
+        Option(None)
+
+        :return: Option containing the last element or None
+        """
+        return Option(None if self.empty() else self.last_or_none(True))
 
     def init(self) -> Sequence[_T_co]:
         """
@@ -2088,6 +2133,132 @@ class Sequence(Generic[_T_co]):
             )
             + message
         )
+
+
+@dataclass
+class Option(Generic[_T_co]):
+    """
+    An Option is a container for a single value, or None if no value is available.
+    When an Option contains a value, it provides a number of functions from Sequence
+    that can be executed on that value.
+    """
+
+    value: _T_co
+    seq: Sequence[_T_co]
+
+    def __init__(self, value: _T_co):
+        self.value = value
+        if value is None:
+            self.seq = Sequence[_T_co]([])
+        elif isinstance(value, list):
+            self.seq = Sequence(value)
+        elif isinstance(value, Sequence):
+            self.seq = value
+        else:
+            self.seq = Sequence[_T_co]([value])
+
+    def __str__(self):
+        return f"Option({self.value})"
+
+    def __repr__(self):
+        return self.__str__()
+
+    def map(self, func: Callable[[_T_co], _T]) -> Option[_T]:
+        """
+        Maps func onto this Option's value, or returns this Option if empty.
+
+        >>> Option(1).map(lambda x: x * -1)
+        Option(-1)
+
+        >>> Option(None).map(lambda x: x * -1)
+        Option(None)
+
+        :param func: function to map with
+        :return: Option with func mapped onto its value, or this Option if empty
+        """
+        return self.seq.map(func).head_option()
+
+    def flat_map(self, func: Callable[[_T_co], Iterable[_T]]) -> Sequence[_T]:
+        """
+        Applies func on each element of this Option's value then flattens the value,
+        returning a Sequence or raising an error if the Option's value is not a list or Sequence.
+        If Option is empty, it's returned instead.
+
+        >>> Option([[1, 2], [3, 4], [5, 6]]).flat_map(lambda x: x)
+        [1, 2, 3, 4, 5, 6]
+
+        >>> Option(["a", "bc", "def"]).flat_map(list)
+        ['a', 'b', 'c', 'd', 'e', 'f']
+
+        >>> Option([[1], [2], [3]]).flat_map(lambda x: x * 2)
+        [1, 1, 2, 2, 3, 3]
+
+        >>> Option(None).flat_map(lambda x: x * -1)
+        Option(None)
+
+        :param func: function to apply to the value of this Option
+        :return: sequence resulting from value mapped to func then flattered,
+                 or empty Sequence if Option is empty
+        :raise ValueError: if the value of Option is not a list or Sequence
+        """
+        if not isinstance(self.value, (list, Sequence)):
+            raise ValueError("Single values cannot be converted to a Sequence")
+        return self.seq.flat_map(func)
+
+    def flatten(self) -> Sequence[_T]:
+        """
+        Flattens the value of this Option by taking the elements of its element
+        and putting them into a new Sequence.
+
+        :return: value of Option as a sequence
+        :raise ValueError: if the value of Option is not a list or Sequence
+        """
+        return self.flat_map(identity)
+
+    def plus(self, sequence: list | Sequence) -> Sequence:
+        if isinstance(sequence, Sequence):
+            seq = sequence
+        elif isinstance(sequence, list):
+            seq = Sequence(sequence)
+        else:
+            raise ValueError("sequence should be o list or Sequence")
+        return self.seq + seq
+
+    def non_empty(self):
+        """
+        Returns True if this Option contains a value, or False if no value is contained.
+
+        :return: True if Option has a value, or False if empty
+        """
+        return self.seq.non_empty()
+
+    def empty(self):
+        """
+        Returns True if this Option does not contain a value, or False if a value is contained.
+
+        :return: True if Option is empty, or False if value is present
+        """
+        return self.seq.empty()
+
+    def or_else(self, other: Any) -> _T_co:
+        """
+        Returns this Option's value, or `other` if Option is empty.
+
+        :param other: the value to return if no value is present
+        :return: Option's value if present, else `other`
+        """
+        return self.value if self.non_empty() else other
+
+    def or_raise_error(self) -> _T_co:
+        """
+        Returns this Option's value, or raises an Error.
+
+        :return: Option's value if present
+        :raise ValueError: if Option is empty
+        """
+        if self.empty():
+            raise ValueError("Option is empty")
+        return self.value
 
 
 _PrimitiveT = TypeVar("_PrimitiveT", str, bool, float, complex, bytes, int)
