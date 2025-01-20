@@ -12,6 +12,7 @@
 
 ### New Features
 
+- Implemented the `plus` function that concatenates iterables and single elements as well as other sequences
 - Added `first_or_none`, a function to match `head_or_none`   
 - Added run_test.sh script
 - Added [parametrize](https://pypi.org/project/parametrize/) for parameterized unit tests
