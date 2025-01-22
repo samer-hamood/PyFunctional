@@ -108,6 +108,8 @@ if TYPE_CHECKING:
 
         t_all: bool = seq([True, True]).all()
 
+        t_none: bool = seq([False, False]).none()
+
         t_exists: bool = seq([1, 2, 3, 4]).exists(lambda x: x == 2)
 
         t_for_all: bool = seq([1, 2, 3]).for_all(lambda x: x > 0)

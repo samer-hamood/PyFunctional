@@ -530,15 +530,51 @@ class TestPipeline(unittest.TestCase):
         self.assertIteratorEqual(result, [2, 3])
         self.assert_type(result)
 
-    def test_any(self):
-        l = [True, False]
-        self.assertTrue(self.seq(l).any())
+    @parametrize(
+        "sequence, no_function",
+        [
+            (["aaa", "BBB", "ccc"], False),
+            ([True, False], True),
+        ],
+    )
+    def test_any(self, sequence, no_function):
+        if no_function:
+            self.assertTrue(self.seq(sequence).any())
+        else:
+            self.assertTrue(self.seq(sequence).any(str.islower))
+            self.assertTrue(self.seq(sequence).any(str.isupper))
+            self.assertFalse(self.seq(sequence).any(lambda s: "d" in s))
 
-    def test_all(self):
-        l = [True, False]
-        self.assertFalse(self.seq(l).all())
-        l = [True, True]
-        self.assertTrue(self.seq(l).all())
+    @parametrize(
+        "sequence, expected, no_function",
+        [
+            ([True, False], False, True),
+            ([True, True], True, True),
+            (["aaa", "bbb", "ccc"], True, False),
+        ],
+    )
+    def test_all(self, sequence, expected, no_function):
+        if no_function:
+            self.assertEqual(expected, self.seq(sequence).all())
+        else:
+            self.assertTrue(self.seq(sequence).all(str.islower))
+            self.assertFalse(self.seq(sequence).all(str.isupper))
+
+    @parametrize(
+        "sequence, expected, no_function",
+        [
+            ([False, False], True, True),
+            ([True, False], False, True),
+            ([True, True], False, True),
+            (["aaa", "bbb", "ccc"], True, False),
+        ],
+    )
+    def test_none(self, sequence, expected, no_function):
+        if no_function:
+            self.assertEqual(expected, self.seq(sequence).none())
+        else:
+            self.assertTrue(self.seq(sequence).none(str.isupper))
+            self.assertFalse(self.seq(sequence).none(str.islower))
 
     def test_enumerate(self):
         l = [2, 3, 4]

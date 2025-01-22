@@ -875,9 +875,17 @@ class Sequence(Generic[_T_co]):
         """
         return self.size() != 0
 
-    def any(self) -> bool:
+    def any(self, func: Callable[[_T_co], Any] | None = None) -> bool:
         """
-        Returns True if any element in the sequence has truth value True
+        Returns True if func on an element in the sequence evaluates to True,
+        or if func is not specified or None, True is returned if any element
+        has truth value of True.
+
+        >>> seq([1, 2, 3, 4]).any(lambda x: x == 2)
+        True
+
+        >>> seq([1, 2, 3, 4]).any(lambda x: x < 0)
+        False
 
         >>> seq([True, False]).any()
         True
@@ -885,13 +893,26 @@ class Sequence(Generic[_T_co]):
         >>> seq([False, False]).any()
         False
 
-        :return: True if any element is True
+        :param func: function to check elements
+        :return: True if func on any element returns True,
+                 or if func is not specified, True if any element is True
         """
-        return any(self)
+        if func is None:
+            return any(self)
+        else:
+            return any(func(element) for element in self)
 
-    def all(self) -> bool:
+    def all(self, func: Callable[[_T_co], Any] | None = None) -> bool:
         """
-        Returns True if the truth value of all items in the sequence true.
+        Returns True if func on all elements in sequence evaluates to True,
+        or if func is not specified or None, True is returned if all elements
+        have a truth value of True.
+
+        >>> seq([1, 2, 3]).all(lambda x: x > 0)
+        True
+
+        >>> seq([1, 2, -1]).all(lambda x: x > 0)
+        False
 
         >>> seq([True, True]).all()
         True
@@ -899,9 +920,38 @@ class Sequence(Generic[_T_co]):
         >>> seq([True, False]).all()
         False
 
-        :return: True if all items truth value evaluates to True
+        :param func: function to check elements
+        :return: True if func on all elements returns True,
+                 or if func is not specified, True if all elements are True
         """
-        return all(self)
+        if func is None:
+            return all(self)
+        else:
+            return all(func(element) for element in self)
+
+    def none(self, func: Callable[[_T_co], Any] | None = None) -> bool:
+        """
+        Returns True if func on all elements in sequence evaluates to False,
+        or if func is not specified or None, True is returned if all elements
+        have a truth value of False.
+
+        >>> seq([-1, -2, -3]).none(lambda x: x > 0)
+        True
+
+        >>> seq([1, 2, -1]).none(lambda x: x > 0)
+        False
+
+        >>> seq([False, False]).none()
+        True
+
+        >>> seq([True, False]).none()
+        False
+
+        :param func: function to check elements
+        :return: True if func on all elements returns False,
+                 or if func is not specified, True if all elements are False
+        """
+        return not self.any(func)
 
     def exists(self, func: Callable[[_T_co], Any]) -> bool:
         """

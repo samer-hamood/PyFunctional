@@ -12,6 +12,8 @@
 
 ### New Features
 
+- Implemented `none` function to complement the `any` and `all` boolean function
+- Retrofitted `any` and `all` with a parameter so as to provide the functionality of `exists` and `for_all` respectively
 - Added `first_or_none`, a function to match `head_or_none`   
 - Added run_test.sh script
 - Added [parametrize](https://pypi.org/project/parametrize/) for parameterized unit tests
