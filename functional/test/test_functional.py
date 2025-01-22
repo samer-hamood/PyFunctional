@@ -348,6 +348,22 @@ class TestPipeline(unittest.TestCase):
         self.assertIteratorEqual(expect, result)
         self.assert_type(result)
 
+    @parametrize(
+        "sequence, start, expected",
+        [
+            ([1, 2, 3, 4], None, [0, 2, 6, 12]),
+            ([1, 2, 3, 4], 1, [1, 4, 9, 16]),
+            ([], None, []),
+        ],
+    )
+    def test_map_indexed(self, sequence, start, expected):
+        if start is None:
+            result = self.seq(sequence).map_indexed(lambda i, x: i * x)
+        else:
+            result = self.seq(sequence).map_indexed(lambda i, x: i * x, start)
+        self.assertIteratorEqual(expected, result)
+        self.assert_type(result)
+
     def test_select(self):
         l = [1, 2, 0, 5]
         expect = [2, 4, 0, 10]

@@ -50,6 +50,25 @@ def map_t(func: Callable):
     )
 
 
+def map_indexed_t(func: Callable, start: int):
+    """
+    Transformation for Sequence.map_indexed
+    :param func: map_indexed function
+    :param start: start of element index
+    :return: transformation
+    """
+
+    def map_indexed(map_func, sequence):
+        for i, element in enumerate(sequence, start):
+            yield map_func(i, element)
+
+    return Transformation(
+        f"map_indexed({name(func)}, {start})",
+        partial(map_indexed, func),
+        None,
+    )
+
+
 def select_t(func: Callable):
     """
     Transformation for Sequence.select

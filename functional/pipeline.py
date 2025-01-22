@@ -627,6 +627,21 @@ class Sequence(Generic[_T_co]):
         """
         return self._transform(transformations.map_t(func))
 
+    def map_indexed(
+        self, func: Callable[[int, _T_co], _T], start: int = 0
+    ) -> Sequence[_T_co | _T]:
+        """
+        Maps func onto the elements of the sequence with each element's index as well.
+
+        >>> seq([1, 2, 3, 4]).map(lambda i, x: x * i)
+        [0, 2, 6, 12]
+
+        :param func: function to map with
+        :param start: beginning of index, zero by default
+        :return: sequence with func mapped onto it
+        """
+        return self._transform(transformations.map_indexed_t(func, start))
+
     def select(self, func: Callable[[_T_co], _T]) -> Sequence[_T]:
         """
         Selects f from the elements of the sequence.
