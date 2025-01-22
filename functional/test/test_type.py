@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Any, Iterator
     from functional import seq
-    from functional.pipeline import Sequence
+    from functional.pipeline import Sequence, Option
     from pandas import DataFrame
 
     def type_checking() -> None:
@@ -30,11 +30,15 @@ if TYPE_CHECKING:
 
         t_head_or_none: int | None = seq([1, 2, 3]).head_or_none()
 
+        t_head_option: Option[int] = seq([1, 2, 3]).head_option()
+
         t_first_or_none: int | None = seq([1, 2, 3]).first_or_none()
 
         t_last: int = seq([1, 2, 3]).last()
 
         t_last_or_none: int | None = seq([1, 2, 3]).last_or_none()
+
+        t_last_option: Option[int] = seq([1, 2, 3]).last_option()
 
         t_init: Sequence[int] = seq([1, 2, 3]).init()
 
