@@ -8,6 +8,8 @@ from functional.pipeline import Sequence, is_iterable, _wrap, extend
 from functional.transformations import name
 from functional import seq, pseq
 
+from parametrize import parametrize  # type: ignore
+
 Data = namedtuple("Data", "x y")
 
 
@@ -176,27 +178,27 @@ class TestPipeline(unittest.TestCase):
         l = self.seq([deque(), deque()], no_wrap=True).first(no_wrap=False)
         self.assert_type(l)
 
-    def test_head_option(self):
+    def test_head_or_none(self):
         l = self.seq([1, 2, 3]).map(lambda x: x)
-        self.assertEqual(l.head_option(), 1)
-        self.assertEqual(l.head_option(no_wrap=True), 1)
+        self.assertEqual(l.head_or_none(), 1)
+        self.assertEqual(l.head_or_none(no_wrap=True), 1)
         l = self.seq([[1, 2], 3, 4]).map(lambda x: x)
-        self.assertEqual(l.head_option(), [1, 2])
-        self.assertEqual(l.head_option(no_wrap=True), [1, 2])
-        self.assert_type(l.head_option())
-        self.assert_not_type(l.head_option(no_wrap=True))
+        self.assertEqual(l.head_or_none(), [1, 2])
+        self.assertEqual(l.head_or_none(no_wrap=True), [1, 2])
+        self.assert_type(l.head_or_none())
+        self.assert_not_type(l.head_or_none(no_wrap=True))
         l = self.seq([[1, 2], 3, 4], no_wrap=True).map(lambda x: x)
-        self.assert_not_type(l.head_option())
+        self.assert_not_type(l.head_or_none())
         l = self.seq([])
-        self.assertIsNone(l.head_option())
-        self.assertIsNone(l.head_option(no_wrap=True))
-        l = self.seq([deque(), deque()]).head_option()
+        self.assertIsNone(l.head_or_none())
+        self.assertIsNone(l.head_or_none(no_wrap=True))
+        l = self.seq([deque(), deque()]).head_or_none()
         self.assert_type(l)
-        l = self.seq([deque(), deque()]).head_option(no_wrap=True)
+        l = self.seq([deque(), deque()]).head_or_none(no_wrap=True)
         self.assert_not_type(l)
-        l = self.seq([deque(), deque()], no_wrap=True).head_option()
+        l = self.seq([deque(), deque()], no_wrap=True).head_or_none()
         self.assert_not_type(l)
-        l = self.seq([deque(), deque()], no_wrap=True).head_option(no_wrap=False)
+        l = self.seq([deque(), deque()], no_wrap=True).head_or_none(no_wrap=False)
         self.assert_type(l)
 
     def test_last(self):
@@ -219,25 +221,25 @@ class TestPipeline(unittest.TestCase):
         l = self.seq([deque(), deque()], no_wrap=True).last(no_wrap=False)
         self.assert_type(l)
 
-    def test_last_option(self):
+    def test_last_or_none(self):
         l = self.seq([1, 2, 3]).map(lambda x: x)
-        self.assertEqual(l.last_option(), 3)
-        self.assertEqual(l.last_option(no_wrap=True), 3)
+        self.assertEqual(l.last_or_none(), 3)
+        self.assertEqual(l.last_or_none(no_wrap=True), 3)
         l = self.seq([1, 2, [3, 4]]).map(lambda x: x)
-        self.assertEqual(l.last_option(), [3, 4])
-        self.assertEqual(l.last_option(no_wrap=True), [3, 4])
-        self.assert_type(l.last_option())
-        self.assert_not_type(l.last_option(no_wrap=True))
+        self.assertEqual(l.last_or_none(), [3, 4])
+        self.assertEqual(l.last_or_none(no_wrap=True), [3, 4])
+        self.assert_type(l.last_or_none())
+        self.assert_not_type(l.last_or_none(no_wrap=True))
         l = self.seq([])
-        self.assertIsNone(l.last_option())
-        self.assertIsNone(l.last_option(no_wrap=True))
-        l = self.seq([deque(), deque()]).last_option()
+        self.assertIsNone(l.last_or_none())
+        self.assertIsNone(l.last_or_none(no_wrap=True))
+        l = self.seq([deque(), deque()]).last_or_none()
         self.assert_type(l)
-        l = self.seq([deque(), deque()]).last_option(no_wrap=True)
+        l = self.seq([deque(), deque()]).last_or_none(no_wrap=True)
         self.assert_not_type(l)
-        l = self.seq([deque(), deque()], no_wrap=True).last_option()
+        l = self.seq([deque(), deque()], no_wrap=True).last_or_none()
         self.assert_not_type(l)
-        l = self.seq([deque(), deque()], no_wrap=True).last_option(no_wrap=False)
+        l = self.seq([deque(), deque()], no_wrap=True).last_or_none(no_wrap=False)
         self.assert_type(l)
 
     def test_init(self):
@@ -298,6 +300,33 @@ class TestPipeline(unittest.TestCase):
         result = self.seq(l).drop_while(lambda x: x < 4)
         self.assertIteratorEqual(expect, result)
         self.assert_type(result)
+
+    @parametrize(
+        "sequence, indices, expected",
+        [
+            ([1, 2, 3, 4, 5, 1, 2], [0, 1, 5, 6], [3, 4, 5]),
+            # No indices specified
+            ([1, 2, 3, 4, 5, 1, 2], [], [1, 2, 3, 4, 5, 1, 2]),
+            ([1, 2, 3, 4, 5, 1, 2], [2, 3, 4], [1, 2, 1, 2]),
+        ],
+    )
+    def test_drop_at(self, sequence, indices, expected):
+        result = self.seq(sequence).drop_at(*indices)
+        self.assertIteratorEqual(expected, result)
+        self.assert_type(result)
+
+    @parametrize(
+        "sequence, indices",
+        [
+            # Negative indices
+            ([1, 2, 3, 4, 5, 6, 7], [-2, -1]),
+            # Indices greater than or equal to sequence size
+            ([1, 2, 3, 4, 5, 6, 7], [7, 8, 9]),
+        ],
+    )
+    def test_drop_at_raises_error_on_invalid_indices(self, sequence, indices):
+        with self.assertRaises(ValueError):
+            self.seq(sequence).drop_at(*indices)
 
     def test_take(self):
         s = self.seq([1, 2, 3, 4, 5, 6])
@@ -378,6 +407,24 @@ class TestPipeline(unittest.TestCase):
         s = self.seq(l)
         result = s.filter(lambda x: x > 0)
         self.assertIteratorEqual(expect, result)
+        self.assert_type(result)
+
+    @parametrize(
+        "sequence, start, expected",
+        [
+            ([1, 3, 5, 7, 9, 11], None, [5, 7, 9]),
+            ([1, 3, 5, 7, 9, 11], 1, [3, 5, 7, 9]),
+            ([], None, []),
+        ],
+    )
+    def test_filter_indexed(self, sequence, start, expected):
+        if start is None:
+            result = self.seq(sequence).filter_indexed(lambda i, x: i > 1 and x < 10)
+        else:
+            result = self.seq(sequence).filter_indexed(
+                lambda i, x: i > 1 and x < 10, start
+            )
+        self.assertIteratorEqual(expected, result)
         self.assert_type(result)
 
     def test_where(self):

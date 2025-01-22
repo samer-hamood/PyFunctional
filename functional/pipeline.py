@@ -39,7 +39,8 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
     # pylint: disable=deprecated-class
-    from typing import Callable, Any, Iterator, NoReturn, Hashable
+    from collections.abc import Callable, Iterator, Hashable
+    from typing import Any, NoReturn
     from _typeshed import SupportsRichComparison
     from _typeshed import SupportsRichComparisonT
     from typing_extensions import TypeGuard
@@ -311,14 +312,14 @@ class Sequence(Generic[_T_co]):
         """
         return self.head(no_wrap=no_wrap)
 
-    def head_option(self, no_wrap: bool | None = None) -> _T_co | None:
+    def head_or_none(self, no_wrap: bool | None = None) -> _T_co | None:
         """
         Returns the first element of the sequence or None, if the sequence is empty.
 
-        >>> seq([1, 2, 3]).head_option()
+        >>> seq([1, 2, 3]).head_or_none()
         1
 
-        >>> seq([]).head_option()
+        >>> seq([]).head_or_none()
         None
 
         :param no_wrap: If set to True, the returned value will never be wrapped with Sequence
@@ -327,6 +328,21 @@ class Sequence(Generic[_T_co]):
         if not self.sequence:
             return None
         return self.head(no_wrap=no_wrap)
+
+    def first_or_none(self, no_wrap: bool | None = None) -> _T_co | None:
+        """
+        Returns the first element of the sequence or None, if the sequence is empty.
+
+        >>> seq([1, 2, 3]).first_or_none()
+        1
+
+        >>> seq([]).first_or_none()
+        None
+
+        :param no_wrap: If set to True, the returned value will never be wrapped with Sequence
+        :return: first element of sequence or None if sequence is empty
+        """
+        return self.head_or_none(no_wrap=no_wrap)
 
     def last(self, no_wrap: bool | None = None) -> _T_co:
         """
@@ -350,14 +366,14 @@ class Sequence(Generic[_T_co]):
         else:
             return _wrap(self.sequence[-1])  # type: ignore
 
-    def last_option(self, no_wrap: bool | None = None) -> _T_co | None:
+    def last_or_none(self, no_wrap: bool | None = None) -> _T_co | None:
         """
         Returns the last element of the sequence or None, if the sequence is empty.
 
-        >>> seq([1, 2, 3]).last_option()
+        >>> seq([1, 2, 3]).last_or_none()
         3
 
-        >>> seq([]).last_option()
+        >>> seq([]).last_or_none()
         None
 
         :param no_wrap: If set to True, the returned value will never be wrapped with Sequence
@@ -523,6 +539,26 @@ class Sequence(Generic[_T_co]):
         :return: elements including and after func evaluates to False
         """
         return self._transform(transformations.drop_while_t(func))
+
+    def drop_at(self, *indices: int) -> Sequence[_T]:
+        """
+        Drops elements in the sequence at the speified indices.
+
+        >>> seq([1, 2, 3, 4, 5, 1, 2]).drop_at(5, 6)
+        [1, 2, 3, 4, 5]
+
+        >>> seq([1, 2, 3, 4, 5, 1, 2]).drop_at()
+        [1, 2, 3, 4, 5, 1, 2]
+
+        :param indices: indices of elements to exclude
+        :return: sequence without elements at specified indices,
+                 or just this sequence if no indices specified
+        :raises ValueError: if any index specified is invalid
+        """
+        for index in indices:
+            if index < 0 or index > self.len():
+                raise ValueError(f"Invalid index: {index}")
+        return self.filter_indexed(lambda i, _: i not in indices)
 
     def take(self, n: int) -> Sequence[_T_co]:
         """
@@ -786,6 +822,22 @@ class Sequence(Generic[_T_co]):
         :return: filtered sequence
         """
         return self._transform(transformations.filter_not_t(func))
+
+    def filter_indexed(
+        self, func: Callable[[int, _T], bool], start: int = 0
+    ) -> Sequence[_T]:
+        """
+        Filters sequence with predicate func that also provides each element's index,
+        which can be used to filter on.
+
+        >>> seq([-1, 1, -2, 2]).filter_indexed(lambda i, x: x < 0 and i > 1)
+        [-2]
+
+        :param func: function to filter on
+        :param start: beginning of index, zero by default
+        :return: filtered sequence
+        """
+        return self._transform(transformations.filter_indexed_t(func, start))
 
     def where(self, func: Callable[[_T_co], Any]) -> Sequence[_T_co]:
         """

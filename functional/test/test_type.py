@@ -28,11 +28,13 @@ if TYPE_CHECKING:
 
         t_first: int = seq([1, 2, 3]).first()
 
-        t_head_option: int | None = seq([1, 2, 3]).head_option()
+        t_head_or_none: int | None = seq([1, 2, 3]).head_or_none()
+
+        t_first_or_none: int | None = seq([1, 2, 3]).first_or_none()
 
         t_last: int = seq([1, 2, 3]).last()
 
-        t_last_option: int | None = seq([1, 2, 3]).last_option()
+        t_last_or_none: int | None = seq([1, 2, 3]).last_or_none()
 
         t_init: Sequence[int] = seq([1, 2, 3]).init()
 
@@ -51,6 +53,8 @@ if TYPE_CHECKING:
         t_drop_while: Sequence[int] = seq([1, 2, 3, 4, 5, 1, 2]).drop_while(
             lambda x: x < 3
         )
+
+        t_drop_at: Sequence[int] = seq([1, 2, 3, 4, 5]).drop_at(0, 2, 4)
 
         t_take: Sequence[int] = seq([1, 2, 3, 4]).take(2)
 
@@ -89,6 +93,10 @@ if TYPE_CHECKING:
         t_filter: Sequence[int] = seq([-1, 1, -2, 2]).filter(lambda x: x > 0)
 
         t_filter_not: Sequence[int] = seq([-1, 1, -2, 2]).filter_not(lambda x: x > 0)
+
+        t_filter_indexed: Sequence[int] = seq([-1, 1, -2, 2]).filter_indexed(
+            lambda i, x: x > 0 and i > 1
+        )
 
         t_where: Sequence[int] = seq([-1, 1, -2, 2]).where(lambda x: x > 0)
 
