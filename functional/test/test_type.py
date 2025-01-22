@@ -92,6 +92,8 @@ if TYPE_CHECKING:
 
         t_filter_not: Sequence[int] = seq([-1, 1, -2, 2]).filter_not(lambda x: x > 0)
 
+        t_filter_not_none: Sequence[int] = seq([-1, 1, None, 2]).filter_not_none()
+
         t_where: Sequence[int] = seq([-1, 1, -2, 2]).where(lambda x: x > 0)
 
         t_count: int = seq([-1, -2, 1, 2]).count(lambda x: x > 0)

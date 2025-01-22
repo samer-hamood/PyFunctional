@@ -803,6 +803,17 @@ class Sequence(Generic[_T_co]):
         """
         return self._transform(transformations.filter_not_t(func))
 
+    def filter_not_none(self):
+        """
+        Filters sequence to include only elements that are not None.
+
+        >>> seq([1, None, 2, None, 3]).filter_not_none()
+        [1, 2, 3]
+
+        :return: sequence with None filtered out
+        """
+        return self.filter_not(lambda x: x is None)
+
     def where(self, func: Callable[[_T_co], Any]) -> Sequence[_T_co]:
         """
         Selects elements where func evaluates to True.
