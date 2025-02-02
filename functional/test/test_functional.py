@@ -264,6 +264,22 @@ class TestPipeline(unittest.TestCase):
         self.assertIteratorEqual(l.tails(), expect)
         self.assertIteratorEqual(l.tails().map(lambda s: s.sum()), [6, 5, 3, 0])
 
+    @parametrize(
+        "sequence, other, expected",
+        [
+            ([1, 2, 3], 4, [1, 2, 3, 4]),
+            ([1, 2], [3, 4], [1, 2, 3, 4]),
+            ([1, 2], seq(3, 4), [1, 2, 3, 4]),
+            ([1, 2], [[3, 4]], [1, 2, [3, 4]]),
+            ([1, 2], [], [1, 2]),
+            ([], [], []),
+        ],
+    )
+    def test_plus(self, sequence, other, expected):
+        result = self.seq(sequence).plus(other)
+        self.assertIteratorEqual(expected, result)
+        self.assert_type(result)
+
     def test_drop(self):
         s = self.seq([1, 2, 3, 4, 5, 6])
         expect = [5, 6]

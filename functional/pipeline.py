@@ -427,6 +427,36 @@ class Sequence(Generic[_T_co]):
         """
         return self._transform(transformations.tails_t(_wrap))
 
+    def plus(self, other: Sequence[Any] | Iterable[Any] | Any) -> Sequence[Any]:
+        """
+        Concatenates sequence with other.
+
+        >>> seq([1, 2, 3]).plus(4)
+        [1, 2, 3, 4]
+
+        >>> seq([1, 2, 3]).plus([4, 5, 6])
+        [1, 2, 3, 4, 5, 6]
+
+        :param other: single element or sequence to concatenate
+        :return: concatenated sequence with other
+        """
+        return self._transform(transformations.plus_t(other))
+
+    def append(self, other: Sequence[Any] | Iterable[Any] | Any) -> Sequence[Any]:
+        """
+        Concatenates sequence with other.
+
+        >>> seq([1, 2, 3]).plus(4)
+        [1, 2, 3, 4]
+
+        >>> seq([1, 2, 3]).plus([4, 5, 6])
+        [1, 2, 3, 4, 5, 6]
+
+        :param other: single element or sequence to concatenate
+        :return: concatenated sequence with other
+        """
+        return self._transform(transformations.plus_t(other, "append"))
+
     @overload
     def cartesian(self, /) -> Sequence[tuple[_T_co]]:
         ...

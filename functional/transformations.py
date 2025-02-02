@@ -11,7 +11,7 @@ from itertools import (
 )
 import collections
 import types
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 
 from functional.execution import ExecutionStrategies
 
@@ -373,6 +373,29 @@ def tails_t(wrap):
         "tails",
         lambda sequence: [wrap(sequence[i:]) for i in range(len(sequence) + 1)],
         {ExecutionStrategies.PRE_COMPUTE},
+    )
+
+
+def plus_t(other, function_name="plus"):
+    """
+    Transformation for Sequence.plus
+    :param other: single element or sequence to concatenate
+    :param function_name: name of pipeline function
+    :return: transformation
+    """
+
+    def plus(sequence):
+        class_name = f"{other.__class__.__module__}.{other.__class__.__name__}"
+        if class_name == "functional.pipeline.Sequence":
+            return sequence + other.to_list()
+        if isinstance(other, Iterable):
+            return sequence + other
+        return sequence + [other]
+
+    return Transformation(
+        f"{function_name}({other})",
+        plus,
+        None,
     )
 
 
